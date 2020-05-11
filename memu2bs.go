@@ -99,7 +99,7 @@ func main() {
 					//fmt.Println("{")
 					t, et := strconv.ParseInt(sp[0], 10, 64)
 					check(et)
-					// convert nanoseconds to milliseconds
+					// convert microseconds to milliseconds
 					event.Timestamp = t/1000
 					event.Delta = 0
 					//fmt.Printf(Timestamp, t)
