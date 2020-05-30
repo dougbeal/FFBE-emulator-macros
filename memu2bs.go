@@ -3,7 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
-	//	"fmt"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"os"
@@ -29,12 +29,20 @@ const EventMouseDown = "\"EventType\": \"MouseDown\","
 const Xc = "\"X\": %.2f,\n"
 const Yc = "\"Y\": %.2f,\n"
 
+type BSFloat float64
+
+func (t BSFloat)MarshalJSON() ([]byte, error) {
+	//do your serializing here
+	str := fmt.Sprintf("%.2f", t)
+	return []byte(str), nil
+}
+
 type Event struct {
 	Timestamp int64
 	Delta int64
 	EventType string
-	X float64
-	Y float64
+	X BSFloat
+	Y BSFloat
 }
 
 type Macro struct {
@@ -82,7 +90,7 @@ func main() {
 	macro.RestartPlayer = false
 	macro.RestartPlayerAfterMinutes = 60
 
-	
+
 	scanner := bufio.NewScanner(file)
 	x := 0.0
 	y := 0.0
@@ -119,12 +127,12 @@ func main() {
 						//fmt.Println(EventMouseUp)
 						event.EventType = "MouseUp"
 					}
-					xp := (x / xd) * 100
-					yp := (y / yd) * 100
+					xp := (x / xd) * 100.0
+					yp := (y / yd) * 100.0
 					// output most recent x,y
-					event.X = math.Round(xp*100)/100
-					event.Y = math.Round(yp*100)/100
-					
+					event.X = (BSFloat)(math.Round(xp*100.0)/100.0)
+					event.Y = (BSFloat)(math.Round(yp*100.0)/100.0)
+
 					//fmt.Printf(Xc, math.Round(xp*100)/100)
 					//fmt.Printf(Yc, math.Round(yp*100)/100)
 					//fmt.Println("},")
@@ -136,18 +144,18 @@ func main() {
 
 	}
 
-	
+
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
-	b, err := json.MarshalIndent(macro, " ", "  "); 
-	
+	b, err := json.MarshalIndent(macro, " ", "  ");
+
 	if err != nil {
 		panic(err)
 	}
 	err = ioutil.WriteFile(destFilename, b, 0777)
 	check(err)
-	//fmt.Println(string(b))	
+	//fmt.Println(string(b))
 
 	// fmt.Println(memufile)
 }
