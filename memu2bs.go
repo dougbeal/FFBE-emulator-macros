@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sort"
 )
 
 func check(e error) {
@@ -145,6 +146,10 @@ func main() {
 	}
 
 
+	// sort by timestamp, bluestacks wants them in order
+	sort.Slice(macro.Events, func(i, j int) bool {
+		return macro.Events[i].Timestamp < macro.Events[j].Timestamp
+	})
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
