@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 	"sort"
+	"log"
 )
 
 func check(e error) {
@@ -114,10 +115,10 @@ func main() {
 					// convert microseconds to milliseconds
 					event.Timestamp = t/1000
 					event.Delta = 0
-					//fmt.Printf(Timestamp, t)
+					log.Printf(Timestamp, t)
 					//fmt.Println(Delta)
 					if mulsp[6] == "0" {
-						//fmt.Println(EventMouseDown)
+						log.Println(EventMouseDown)
 						event.EventType = "MouseDown"
 						// only mousedown events have valid x,y
 						fx, ex := strconv.ParseFloat(mulsp[4], 64)
@@ -158,22 +159,23 @@ func main() {
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+	log.Println(downEvents)
 	// sort by timestamp, bluestacks wants them in order
-	sort.Slice(macro.Events, func(i, j int) bool {
-		if macro.Events[i].Timestamp == macro.Events[j].Timestamp {
-			return macro.Events[i].memuOrder < macro.Events[j].memuOrder
+	sort.Slice(downEvents, func(i, j int) bool {
+		if downEvents[i].Timestamp == downEvents[j].Timestamp {
+			return downEvents[i].memuOrder < downEvents[j].memuOrder
 		}
-		return macro.Events[i].Timestamp < macro.Events[j].Timestamp
+		return downEvents[i].Timestamp < downEvents[j].Timestamp
 
 	})
-
+	log.Println(downEvents)
 	for _, event := range downEvents {
 		macro.Events = append(macro.Events, event)
 		up := event
 		up.EventType = "MouseUp"
 		macro.Events = append(macro.Events, up)
 	}
-
+	log.Println(macro)
 	b, err := json.MarshalIndent(macro, " ", "  ");
 
 	if err != nil {
