@@ -39,6 +39,7 @@ func (t BSFloat)MarshalJSON() ([]byte, error) {
 }
 
 type Event struct {
+	memuOrder int
 	Timestamp int64
 	Delta int64
 	EventType string
@@ -75,6 +76,7 @@ func main() {
 	base := path.Base(memufile)
 	name := strings.TrimSuffix(base, path.Ext(memufile))
 	destFilename := name + ".json"
+	downEvents :=  make([]Event, 0)
 
 	macro := Macro{}
 	macro.Events = make([]Event, 0)
@@ -95,6 +97,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 	x := 0.0
 	y := 0.0
+	line := 0
 	for scanner.Scan() {
 		event := Event{}
 		s := scanner.Text()
@@ -137,7 +140,12 @@ func main() {
 					//fmt.Printf(Xc, math.Round(xp*100)/100)
 					//fmt.Printf(Yc, math.Round(yp*100)/100)
 					//fmt.Println("},")
-					macro.Events = append(macro.Events, event)
+					if event.EventType == "MouseDown" {
+						event.memuOrder = line
+						line = line + 1
+						downEvents = append(downEvents, event)
+					}
+
 				}
 			}
 
@@ -146,13 +154,26 @@ func main() {
 	}
 
 
-	// sort by timestamp, bluestacks wants them in order
-	sort.Slice(macro.Events, func(i, j int) bool {
-		return macro.Events[i].Timestamp < macro.Events[j].Timestamp
-	})
+
 	if err := scanner.Err(); err != nil {
 		panic(err)
 	}
+	// sort by timestamp, bluestacks wants them in order
+	sort.Slice(macro.Events, func(i, j int) bool {
+		if macro.Events[i].Timestamp == macro.Events[j].Timestamp {
+			return macro.Events[i].memuOrder < macro.Events[j].memuOrder
+		}
+		return macro.Events[i].Timestamp < macro.Events[j].Timestamp
+
+	})
+
+	for _, event := range downEvents {
+		macro.Events = append(macro.Events, event)
+		up := event
+		up.EventType = "MouseUp"
+		macro.Events = append(macro.Events, up)
+	}
+
 	b, err := json.MarshalIndent(macro, " ", "  ");
 
 	if err != nil {
